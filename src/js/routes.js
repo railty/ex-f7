@@ -1,5 +1,6 @@
 
 import HomePage from '../pages/home.svelte';
+import LoginPage from '../pages/login.svelte';
 import AboutPage from '../pages/about.svelte';
 import FormPage from '../pages/form.svelte';
 import CatalogPage from '../pages/catalog.svelte';
@@ -14,6 +15,10 @@ var routes = [
   {
     path: '/',
     component: HomePage,
+  },
+  {
+    path: '/login/',
+    component: LoginPage,
   },
   {
     path: '/about/',

@@ -10,13 +10,20 @@
     </View>
   </Panel>
 
-
   <!-- Right panel with reveal effect-->
   <Panel right reveal themeDark>
-    <View>
+    <View id="right-view">
       <Page>
-        <Navbar title="Right Panel"/>
-        <Block>Right panel content goes here</Block>
+        <Navbar title="Account"/>
+        <List>
+          <ListItem link="/login/" panelClose view="#view-home" title="Login"></ListItem>
+
+          <ListItem link="/loginByPhone/" panelClose view="#view-home" title="Login by Phone"></ListItem>
+          <ListItem link="/register/" panelClose view="#view-home" title="Sign up"></ListItem>
+          <ListButton title="Sign up" loginScreenOpen="#my-login-screen"/>
+          <ListButton title="Login" loginScreenOpen="#my-login-screen"/>
+          <ListButton title="Logout"/>
+        </List>
       </Page>
     </View>
   </Panel>
@@ -32,7 +39,7 @@
     </Toolbar>
 
     <!-- Your main view/tab, should have "view-main" class. It also has "tabActive" prop -->
-    <View id="view-home" main tab tabActive url="/" />
+    <View id="view-home" main tab tabActive url="/" pushState="true" />
 
     <!-- Catalog View -->
     <View id="view-catalog" name="catalog" tab url="/catalog/" />

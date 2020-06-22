@@ -48,7 +48,20 @@ export default ['item'].map((name, index) => ({
 			browser: true,
 			dedupe: ['svelte']
 		}),
-		commonjs(),
+		commonjs({
+			namedExports: {
+				// left-hand side can be an absolute path, a path
+				// relative to the current directory, or the name
+				// of a module in node_modules
+				//'node_modules/idb/build/idb.js': ['deleteDb', 'openDb'],
+				//'idb': ['deleteDb', 'openDb'],
+				'node_modules/firebase/dist/index.cjs.js': ['initializeApp', 'firestore', 'auth', 'analytics' ],
+				'node_modules/firebase/app/dist/index.esm.js': ['initializeApp', 'firestore', 'auth', 'analytics' ],
+				//'node_modules/firebase/app/dist/index.cjs.js': [],
+				//'node_modules/firebase/auth/dist/index.cjs.js': ['auth'],
+				//'node_modules/firebase/analytics/dist/index.cjs.js': ['analytics']
+			}
+		}),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
