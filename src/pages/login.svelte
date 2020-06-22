@@ -11,7 +11,7 @@
   </Block>
   {:else}
   <List accordionList>
-      <ListItem accordionItem title="Login" accordionItemOpened>
+      <ListItem accordionItem title="Login" accordionItemOpened on:accordionOpened={()=>{selectedItem = "login"}} style={accordionStyle['login']}>
         <AccordionContent>
           <Block>
             <BlockHeader>Please enter your email and password</BlockHeader>
@@ -38,7 +38,7 @@
           </Block>
         </AccordionContent>
       </ListItem>
-      <ListItem accordionItem title="Forget password?">
+      <ListItem accordionItem title="Forget password?" on:accordionOpened={()=>{selectedItem = "forgetPassword"}} style={accordionStyle['forgetPassword']}>
         <AccordionContent>
           <Block>
             <BlockHeader>Please enter your email</BlockHeader>
@@ -57,7 +57,7 @@
           </Block>
         </AccordionContent>
       </ListItem>
-      <ListItem accordionItem title="Sign up for a new account">
+      <ListItem accordionItem title="Sign up for a new account" on:accordionOpened={()=>{selectedItem = "register"}} style={accordionStyle['register']}>
         <AccordionContent>
           <Block>
             <BlockHeader>Register by email and password</BlockHeader>
@@ -102,6 +102,16 @@
   let password = '123456';
   let message = "Not logged in yet";
   let messageColor = "";
+  let selectedItem = "login";
+  let accordionStyle={};
+
+  $: {
+    console.log("11111111111");
+    for (let it of ['login', 'forgetPassword', 'register']){
+      accordionStyle[it] = "color:blue;font-size:75%";
+    }
+    accordionStyle[selectedItem] = "";
+  }    
 
   onMount(() => {
     let firebaseConfig = {
@@ -181,6 +191,10 @@
         message = error.message;  
       });
     }
+  }
+  function accordionOpened(e){
+    console.log("accordionOpened", e);    
+
 
   }
 </script>
