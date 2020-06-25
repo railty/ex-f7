@@ -12,10 +12,26 @@
 
   <!-- Page content -->
   <Block strong>
-    <p id="example">This is an example of tabs-layout application. The main point of such tabbed layout is that each tab contains independent view with its own routing and navigation.</p>
+    <p id="example">This is an example of tabs-layout application.</p>
 
     <p>Each tab/view may have different layout, different navbar type (dynamic, fixed or static) or without navbar like this tab.</p>
   </Block>
+
+
+<BlockTitle>Mail App</BlockTitle>
+  <List mediaList>
+  {#each items as item}
+    <ListItem
+      link="#"
+      title={item.title}
+      after={item.price}
+      subtitle={item.subtitle}
+      text={item.uid}
+    >
+    <div slot="content"><Button iconMaterial="delete" on:click={()=>{deleteItem(item.id)}}/></div>
+    </ListItem>
+  {/each}
+  </List>
 
   <BlockTitle>Navigation</BlockTitle>
   <List>
@@ -27,10 +43,10 @@
   <Block strong>
     <Row>
       <Col width="50">
-        <Button fill raised popupOpen="#my-popup">Popup</Button>
+        <Button fill raised on:click={testRead}>testRead</Button>
       </Col>
       <Col width="50">
-        <Button fill raised loginScreenOpen="#my-login-screen">Login Screen</Button>
+        <Button fill raised on:click={testWrite}>testWrite</Button>
       </Col>
     </Row>
   </Block>
@@ -78,8 +94,85 @@
     ListItem,
     Row,
     Col,
-    Button
+    Button,
+    Icon
   } from 'framework7-svelte';
+
+
+  import firebase from 'firebase/app';
+  import 'firebase/firestore';
+  import { user } from '../components/security/user.js';
+  
+  firebase.firestore().enablePersistence()
+  .catch(function(err) {
+    console.log("error=", err);
+      if (err.code == 'failed-precondition') {
+          // Multiple tabs open, persistence can only be enabled
+          // in one tab at a a time.
+          // ...
+      } else if (err.code == 'unimplemented') {
+          // The current browser does not support all of the
+          // features required to enable persistence
+          // ...
+      }
+  });
+
+let currentUser;
+  let db = firebase.firestore();
+
+  let items = [];
+
+  user.subscribe(value => {
+    currentUser = value;
+    console.log(currentUser);
+    if (currentUser) testRead();
+  });
+
+  
+  function testRead(){
+    //db.collection("items").get().then((querySnapshot) => {
+    db.collection("items").where('uid', "==", currentUser.uid).get().then((querySnapshot) => {      
+      items = querySnapshot.docs.map((doc)=>{
+        let d = doc.data();
+        return {
+          id: doc.id,
+          title: d.title,
+          price: d.price,
+          subtitle: d.subtitle,
+          text: d.text, 
+          uid: d.uid
+        };
+      })
+    });    
+  }
+  
+  function testWrite(){
+    console.log("test data");
+
+    db.collection("items").add({
+      title: "title",
+      subtitle: "subtitle",
+      price: (Math.random()*10).toFixed(2),
+      text: "text",
+      uid: currentUser.uid
+    })
+    .then(function(docRef) {
+        console.log("Document written with ID: ", docRef.id);
+    })
+    .catch(function(error) {
+        console.error("Error adding document: ", error);
+    });    
+  }
+
+  function deleteItem(id){
+    console.log("delete", id);
+
+    db.collection("items").doc(id).delete().then(function() {
+      console.log("Document successfully deleted!");
+    }).catch(function(error) {
+      console.error("Error removing document: ", error);
+    });
+  }
 </script>
 
 <style>

@@ -1,93 +1,37 @@
 <Page>
-  <Navbar title="Login" backLink="Back" />
+  <Navbar title={selectedLm.title} backLink="Back" />
 
-  {#if user}
+  {#if currentUser}
   <Block>
     <List >
-      <ListItem>Signed in as <u>{user.email}</u></ListItem>
-      <ListButton fill title="Sign out" onClick={() => login()} >Sign out</ListButton>
+      <ListItem>Signed in as <u>{currentUser.email||currentUser.phoneNumber}</u></ListItem>
+      <ListButton onClick={() => logout()} >Sign out</ListButton>
     </List>
     <BlockFooter textColor={messageColor}>{message}</BlockFooter>
   </Block>
   {:else}
-  <List accordionList>
-      <ListItem accordionItem title="Login" accordionItemOpened on:accordionOpened={()=>{selectedItem = "login"}} style={accordionStyle['login']}>
-        <AccordionContent>
-          <Block>
-            <BlockHeader>Please enter your email and password</BlockHeader>
-            <List >
-              <ListInput
-                outline
-                label="Email"
-                floatingLabel
-                type="email"
-                value={email}
-                onInput={(e)=>{email=e.target.value}}
-                clearButton />
-              <ListInput
-                outline
-                label="Password"
-                floatingLabel
-                type="password"
-                password={password}
-                onInput={(e)=>{password=e.target.value}}
-                clearButton />
-              <ListButton fill title="Sign In" onClick={() => login()} >Sign in</ListButton>
-            </List>
-            <BlockFooter textColor={messageColor}>{message}</BlockFooter>
-          </Block>
-        </AccordionContent>
-      </ListItem>
-      <ListItem accordionItem title="Forget password?" on:accordionOpened={()=>{selectedItem = "forgetPassword"}} style={accordionStyle['forgetPassword']}>
-        <AccordionContent>
-          <Block>
-            <BlockHeader>Please enter your email</BlockHeader>
-            <List >
-              <ListInput
-                outline
-                label="Email"
-                floatingLabel
-                type="email"
-                value={email}
-                onInput={(e)=>{email=e.target.value}}
-                clearButton />
-              <ListButton fill title="Sign In" onClick={() => login()} >Reset password by Email</ListButton>
-            </List>
-            <BlockFooter textColor={messageColor}>{message}</BlockFooter>
-          </Block>
-        </AccordionContent>
-      </ListItem>
-      <ListItem accordionItem title="Sign up for a new account" on:accordionOpened={()=>{selectedItem = "register"}} style={accordionStyle['register']}>
-        <AccordionContent>
-          <Block>
-            <BlockHeader>Register by email and password</BlockHeader>
-            <List >
-              <ListInput
-                outline
-                label="Email"
-                floatingLabel
-                type="email"
-                value={email}
-                onInput={(e)=>{email=e.target.value}}
-                clearButton />
-              <ListInput
-                outline
-                label="Password"
-                floatingLabel
-                type="password"
-                password={password}
-                onInput={(e)=>{password=e.target.value}}
-                clearButton />
-              <ListButton fill title="Sign In" onClick={() => login()} >Register</ListButton>
-            </List>
-            <BlockFooter textColor={messageColor}>{message}</BlockFooter>
-          </Block>
-        </AccordionContent>
-      </ListItem>
-    </List>
+    {#if selectedLm.name == 'email'}
+      <EmailProvider />
+    {/if}
+    {#if selectedLm.name == 'phone'}
+      <PhoneProvider />
+    {/if}
+    
+    <Block>
+      <List Title="Other ways to Login">
+        {#each lms as lm }
+        <ListButton fill title="Sign out" onClick={()=>{changeLm(lm.name)}}>
+          <span class:smaller={selectedLm.name!=lm.name}>{lm.title}</span>
+        </ListButton>
+        {/each}
+
+        <ListButton fill title="Sign out" onClick={()=>{google()}}>
+          <span class="smaller">Login by Google</span>
+        </ListButton>
+      </List>
+    </Block>
+
   {/if}
-
-
 
 </Page>
 <script>
@@ -96,105 +40,70 @@
   import firebase from 'firebase/app';
   import 'firebase/auth';
 
+  import EmailProvider from '../components/security/emailProvider.svelte';
+  import PhoneProvider from '../components/security/phoneProvider.svelte';
+  import { user } from '../components/security/user.js';
+
+  let currentUser;
   let state = "login";
-  let user;
   let email = 'laji@list4d.com';
   let password = '123456';
   let message = "Not logged in yet";
   let messageColor = "";
   let selectedItem = "login";
   let accordionStyle={};
-
+  //login method
+  let lms = [
+    {
+      name: 'email',
+      title: 'Login by Email'
+    }, 
+    {
+      name:'phone',
+      title: 'Login by Phone (SMS)'
+    }, 
+  ];
+  let selectedLm = lms[1];
   $: {
-    console.log("11111111111");
     for (let it of ['login', 'forgetPassword', 'register']){
-      accordionStyle[it] = "color:blue;font-size:75%";
+      accordionStyle[it] = "smaller";
     }
     accordionStyle[selectedItem] = "";
   }    
 
-  onMount(() => {
-    let firebaseConfig = {
-        apiKey: "AIzaSyCEBMrZkDnzPFTWrGCQg3GFHfLMJckus3o",
-        authDomain: "auth-7667c.firebaseapp.com",
-        databaseURL: "https://auth-7667c.firebaseio.com",
-        projectId: "auth-7667c",
-        storageBucket: "auth-7667c.appspot.com",
-        messagingSenderId: "977429919824",
-        appId: "1:977429919824:web:0b3fe755ee70b2a82db955"
-      };
+  user.subscribe(value => {
+    currentUser = value;
+    
+    if (currentUser){
+      state = "signedIn";
+      message = `logged in as ${currentUser.email||currentUser.phoneNumber}`;
+      messageColor = "teal";
+    }
+    else{
+      state = "login";
+    }
+
+  });
   
-      firebase.initializeApp(firebaseConfig);    
-
-      firebase.auth().onAuthStateChanged(function(u) {
-        console.log("state changed", u);
-        user = u;
-
-        if (user){
-          state = "signedIn";
-          message = `logged in as ${user.email}`;
-          messageColor = "teal";
-        }
-        else{
-          state = "login";
-        }
-        /*
-          var displayName = user.displayName;
-          var email = user.email;
-          var emailVerified = user.emailVerified;
-          var photoURL = user.photoURL;
-          var isAnonymous = user.isAnonymous;
-          var uid = user.uid;
-          var providerData = user.providerData;
-        */
-      });
+  onMount(() => {
   })
 
-  function login(){
-    console.log(email, password);
-    messageColor = "";
-    message = "";  
-
-    if (state=="register"){
-      firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
-        messageColor = error.code ? "red" : "";
-        message = error.message;  
-      });      
-    }
-
-    if (state=="login"){
-      firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
-        console.log(error);
-        messageColor = error.code ? "red" : "";
-        message = error.message;  
-      });
-    }
-
-    if (state=="resetPassword"){
-      firebase.auth().sendPasswordResetEmail(email).then(function() {
-        console.log("Success");
-        messageColor = "";
-        message = "Please check your email form instruction";  
-      }).catch(function(error) {
-        // An error happened.
-      });
-    }
-
-    if (state=="signedIn"){
-      firebase.auth().signOut().then(function() {
-        console.log("Success");
-        messageColor = "";
-        message = "Successfully signed out";  
-      }).catch(function(error) {
-        console.log(error);
-        messageColor = error.code ? "red" : "";
-        message = error.message;  
-      });
-    }
+  function changeLm(lm){
+    selectedLm = lms.find((o)=>o.name==lm); 
   }
-  function accordionOpened(e){
-    console.log("accordionOpened", e);    
 
+  function logout(){
+    firebase.auth().signOut();
+  }
 
+  function google(){
+    let provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithRedirect(provider);
   }
 </script>
+<style>
+.smaller {
+  font-size: 75%;
+  color: blue;
+}
+</style>

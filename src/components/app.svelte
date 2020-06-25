@@ -16,13 +16,7 @@
       <Page>
         <Navbar title="Account"/>
         <List>
-          <ListItem link="/login/" panelClose view="#view-home" title="Login"></ListItem>
-
-          <ListItem link="/loginByPhone/" panelClose view="#view-home" title="Login by Phone"></ListItem>
-          <ListItem link="/register/" panelClose view="#view-home" title="Sign up"></ListItem>
-          <ListButton title="Sign up" loginScreenOpen="#my-login-screen"/>
-          <ListButton title="Login" loginScreenOpen="#my-login-screen"/>
-          <ListButton title="Logout"/>
+          <ListItem link="/login/" panelClose view="#view-home" title="Login">{currentUser ? currentUser.email||currentUser.phoneNumber : 'Login'}</ListItem>
         </List>
       </Page>
     </View>
@@ -124,6 +118,30 @@
   } from 'framework7-svelte';
 
   import routes from '../js/routes';
+  import firebase from 'firebase/app';
+  import { user } from '../components/security/user.js';
+
+  let currentUser;
+  user.subscribe(value => {
+    currentUser = value;
+    console.log(currentUser);
+  });
+
+  let firebaseConfig = {
+      apiKey: "AIzaSyCEBMrZkDnzPFTWrGCQg3GFHfLMJckus3o",
+      authDomain: "auth-7667c.firebaseapp.com",
+      databaseURL: "https://auth-7667c.firebaseio.com",
+      projectId: "auth-7667c",
+      storageBucket: "auth-7667c.appspot.com",
+      messagingSenderId: "977429919824",
+      appId: "1:977429919824:web:0b3fe755ee70b2a82db955"
+    };
+
+  firebase.initializeApp(firebaseConfig);    
+  firebase.auth().onAuthStateChanged(function(u) {
+    console.log("state changed", u);
+    user.set(u);
+  });
 
   // Framework7 Parameters
   let f7params = {
